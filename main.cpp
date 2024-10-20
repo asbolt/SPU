@@ -5,16 +5,16 @@
 
 int main ()
 {
-    char operation [10] = {}; 
-
     Stack *stack;
     stackCtor (stack, 10);
 
     while (1)
     {
-        if (operations (operation, stack) < 0)
+        if (operations (stack) < 0)
             return 0;
     }
+
+    stackDtor (stack, VALUES_FOR_ERROR);
 
     return 0;
 }

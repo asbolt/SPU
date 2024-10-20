@@ -41,28 +41,32 @@ StackErrors stackPrintError (Stack *stack, int line, const char* function, const
 {
     switch (stack->stackError)
     {
+    case STACK_NULL:
+        printf ("Stack = NULL\n");
+        break;
+
     case STACK_DATA_NULL:
-        printf ("Data = NULL");
+        printf ("Data = NULL\n");
         break;
 
     case STACK_BAD_SIZE:
-        printf ("Size < 0");
+        printf ("Size < 0\n");
         break;
 
     case STACK_BAD_CAPACITY:
-        printf ("Capacity < 0");
+        printf ("Capacity < 0\n");
         break;
 
     case STACK_BAD_ELEMENT:
-        printf ("Element = poison value");
+        printf ("Element = poison value\n");
         break;
 
     case STACK_BAD_CANARY:
-        printf ("Data corrupted");
+        printf ("Data corrupted\n");
         break;
 
     case STACK_CAPACITY_LESS_THEN_SIZE:
-        printf ("Capacity < size");
+        printf ("Capacity < size\n");
         break;
 
     case STACK_GOOD:
