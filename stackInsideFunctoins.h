@@ -8,6 +8,6 @@
 
 StackErrors stackExtend (Stack *stack, int line, const char* function, const char* file);
 StackErrors stackReduce (Stack *stack, int line, const char* function, const char* file);
-int dataHash (int *array, int arraySize);
+long long int dataHash (int *array, int arraySize);
 
 #endif

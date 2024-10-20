@@ -4,17 +4,20 @@
 
 
 int main ()
-{
-    Stack *stack;
-    stackCtor (stack, 10);
+{ 
+    SPU spu = {};
+    stackCtor (&spu.stack, 10);
+
+    readFile (&spu);
 
     while (1)
     {
-        if (operations (stack) < 0)
+        if (operations(&spu) < 0)
+        {
+            stackDtor (&spu.stack, VALUES_FOR_ERROR);
             return 0;
+        }
     }
-
-    stackDtor (stack, VALUES_FOR_ERROR);
 
     return 0;
 }

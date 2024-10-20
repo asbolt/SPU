@@ -4,7 +4,7 @@ StackErrors stackExtend (Stack *stack, int line, const char* function, const cha
 {
     STACK_CHECK(stack, line, function, file);
 
-    stack->data = (stackElementType*)realloc (stack->data, (stack->capacity) * sizeof(stackElementType) * EXTEND_NUMBER + SPACE_FOR_CANARIES);
+    stack->data = (stackElementType*)realloc (stack->data, (size_t)((stack->capacity) * (int)sizeof(stackElementType) * EXTEND_NUMBER) + SPACE_FOR_CANARIES);
     if (stack->data == NULL)
         return STACK_DATA_NULL;
     
@@ -22,7 +22,7 @@ StackErrors stackReduce (Stack *stack, int line, const char* function, const cha
 {
     STACK_CHECK(stack, line, function, file);
 
-    stack->data = (stackElementType*)realloc (stack->data, (stack->capacity) * sizeof(stackElementType) / REDUCE_NUMBER + SPACE_FOR_CANARIES);
+    stack->data = (stackElementType*)realloc (stack->data, (size_t)((stack->capacity) * (int)sizeof(stackElementType) / REDUCE_NUMBER + SPACE_FOR_CANARIES));
     if (stack->data == NULL)
         return STACK_DATA_NULL;
 
@@ -31,7 +31,7 @@ StackErrors stackReduce (Stack *stack, int line, const char* function, const cha
     return STACK_GOOD;
 }
 
-int dataHash (stackElementType *array, int arraySize)
+long long int dataHash (stackElementType *array, int arraySize)
 {
     long long int hash = 0;
 

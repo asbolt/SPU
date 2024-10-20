@@ -50,7 +50,7 @@ int stackPop (Stack *stack, int line, const char* function, const char* file)
 
 StackErrors stackCtor (Stack *stack, stackElementType size)
 {
-    stack->data = (stackElementType*)calloc(size + SPACE_FOR_CANARIES, sizeof(stackElementType));
+    stack->data = (stackElementType*)calloc((size_t)(size + SPACE_FOR_CANARIES), sizeof(stackElementType));
     if (stack->data == NULL)
         return STACK_DATA_NULL;
 
@@ -96,7 +96,7 @@ StackErrors stackDump (Stack *stack)
     printf ("Size: %d\n", stack->size);
     printf ("Capacity: %d\n", stack->capacity);
     printf ("Poison value: %d\n", stack->poisonValue);
-    printf ("Hash: %d\n", stack->hash);
+    printf ("Hash: %lld\n", stack->hash);
 
     printf ("\n\n\n");
 

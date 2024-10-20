@@ -43,7 +43,7 @@ struct Stack
     stackElementType *data             = NULL;
     int size                           = 0;
     int capacity                       = 0;
-    int hash                           = 0;
+    long long int hash                           = 0;
     stackElementType poisonValue       = 0;
     StackErrors stackError             = STACK_GOOD;
     stackCanariesType endCanary      = 0;

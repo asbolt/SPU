@@ -3,6 +3,8 @@
 
 #include "stack.h"
 
+#define FILE_NAME "text.txt"
+
 enum CMD
 {
     PUSH = 1,
@@ -16,6 +18,16 @@ enum CMD
     ERROR = -2
 };
 
-CMD operations (Stack *stack); 
+struct SPU
+{
+    int code [25] = {};
+    int codeSize = 0;
+    Stack stack = {};
+    int id = 0;
+};
+
+CMD operations (SPU *spu);
+CMD assembler (SPU *spu, FILE *ptrFile);
+int readFile (SPU *spu);
 
 #endif
