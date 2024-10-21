@@ -1,8 +1,8 @@
 PUSH 7
-PUSH 7
+PUSH [ AX ]
 ADD
 
-PUSH 2
+PUSH 1
 DIV
 
 OUT

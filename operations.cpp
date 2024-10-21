@@ -10,12 +10,59 @@ int operations (SPU *spu)
     switch (cmd)
     {
         case PUSH:
-            {(spu->ip)++;
-
-            int arg = spu->code[spu->ip];
+            {
             (spu->ip)++;
-            stackPush (&spu->stack, arg, VALUES_FOR_ERROR);
-            break;}
+            int type = spu->code[spu->ip];
+            (spu->ip)++;
+
+            if (type == 9)
+            {
+                int address = spu->regs[spu->code[spu->ip]];
+                (spu->ip)++;
+
+                stackPush (&spu->stack, spu->RAM[address], VALUES_FOR_ERROR);
+                return PUSH;
+            }
+
+            if (type == 8)
+            {
+                int address = spu->code[spu->ip];
+                (spu->ip)++;
+                address += spu->regs[spu->code[spu->ip]];
+                (spu->ip)++;
+
+                stackPush (&spu->stack, spu->RAM[address], VALUES_FOR_ERROR);
+                return PUSH;
+            }
+
+            if (type == 7)
+            {
+                int address = 0;
+
+                int arg = spu->code[spu->ip];
+                (spu->ip)++;
+                address += arg;
+
+                stackPush (&spu->stack, spu->RAM[address], VALUES_FOR_ERROR);
+                return PUSH;
+            }
+
+            if (type == 1)
+            {
+                int arg = spu->code[spu->ip];
+                (spu->ip)++;
+                stackPush (&spu->stack, arg, VALUES_FOR_ERROR);
+            }
+
+            if (type == 2)
+            {
+                int arg = spu->regs[spu->ip];
+                (spu->ip)++;
+                stackPush (&spu->stack, spu->regs[arg], VALUES_FOR_ERROR);
+            }
+
+            break;
+            }
 
         case POP:
             {(spu->ip)++;
@@ -107,8 +154,116 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
         fprintf (asmFile, "%d ", PUSH);
 
         int arg = 0;
-        fscanf (ptrFile, "%d", &arg);
-        fprintf (asmFile, "%d ", arg);
+        char str[2] = {};
+        char reg[2] = {};
+
+        if (fscanf (ptrFile, "%d", &arg) == 1)
+        {
+            fprintf (asmFile, "%d ", 1);
+            fprintf (asmFile, "%d ", arg);
+            
+        } else if (fscanf (ptrFile, "%s", str) == 1)
+        {
+            if (str[0] == '[')
+            {
+
+                if (fscanf (ptrFile, "%d", &arg) == 1)
+                {
+                    if (fscanf (ptrFile, "%s", str) == 1)
+                    {
+                        if (str[0] == '+')
+                        {
+                            fprintf (asmFile, "%d ", 8);
+                            fprintf (asmFile, "%d ", arg);
+                            fscanf (ptrFile, "%s", reg);
+
+                            if (strcmp(reg, "AX") == 0)
+                            {
+                                fprintf (asmFile, "%d ", 1);
+                            } else if (strcmp(reg, "BX") == 0)
+                            {
+                                fprintf (asmFile, "%d ", 2);
+                            } else if (strcmp(reg, "CX") == 0)
+                            {
+                                fprintf (asmFile, "%d ", 3);
+                            } else {
+                                printf ("Syntax error\n");
+                                return ERROR;
+                            }
+
+                            fscanf (ptrFile, "%s", str);
+                            if (str[0] == ']')
+                            {
+                                return PUSH;
+                            } else {
+                                printf ("Syntax error\n");
+                                return ERROR;
+                            }
+
+                        } else if (str[0] == ']')
+                        {
+                            fprintf (asmFile, "%d ", 7);
+                            fprintf (asmFile, "%d ", arg);
+                            return PUSH;
+                        } else 
+                        {
+                            printf ("Syntax error\n");
+                            return ERROR;
+                        }
+                    }
+                } else if (fscanf (ptrFile, "%s", reg) == 1)
+                {
+                    if (reg[1] == 'X')
+                    {
+                        if (strcmp(reg, "AX") == 0)
+                        {
+                            fprintf (asmFile, "%d ", 9);
+                            fprintf (asmFile, "%d ", 1);
+                        } else if (strcmp(reg, "BX") == 0)
+                        {
+                            fprintf (asmFile, "%d ", 9);
+                            fprintf (asmFile, "%d ", 2);
+                        } else if (strcmp(reg, "CX") == 0)
+                        {
+                            fprintf (asmFile, "%d ", 9);
+                            fprintf (asmFile, "%d ", 3);
+                        } else {
+                            printf ("Syntax error\n");
+                            return ERROR;
+                        }
+                    } else {
+                        printf ("Syntax error\n");
+                        return ERROR;
+                    }
+
+                    fscanf (ptrFile, "%s", str);
+                            if (str[0] == ']')
+                            {
+                                return PUSH;
+                            } else {
+                                printf ("Syntax error\n");
+                                return ERROR;
+                            }
+                }
+            } else if (str[1] == 'X')
+            {
+                fprintf (asmFile, "%d ", 2);
+
+                if (strcmp(str, "AX") == 0)
+                {
+                    fprintf (asmFile, "%d ", 1);
+                } else if (strcmp(str, "BX") == 0)
+                {
+                    fprintf (asmFile, "%d ", 2);
+                } else if (strcmp(str, "CX") == 0)
+                {
+                    fprintf (asmFile, "%d ", 3);
+                } else {
+                    printf ("Syntax error\n");
+                    return ERROR;
+                }
+            }
+        }
 
         return PUSH;
 
@@ -195,8 +350,6 @@ int readFile (SPU *spu)
                     return 0;
                 }
             }
-
-        }
-            
+        }      
     }
 }

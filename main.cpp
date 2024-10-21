@@ -11,6 +11,10 @@ int main ()
     if (readFile (&spu) == 1)
         return 1;
 
+    spu.regs[1] = 7;
+    spu.RAM[7] = 1;
+    spu.RAM[9] = 3;
+
     while (1)
     {
         if (operations(&spu) < 0)
@@ -19,6 +23,7 @@ int main ()
             return 0;
         }
     }
+
 
     return 0;
 }

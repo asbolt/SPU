@@ -23,7 +23,8 @@ struct SPU
 {
     int code [25] = {};
     Stack stack = {};
-    int regs [3] = {};
+    int regs [4] = {};
+    int RAM [100] = {};
     int ip = 0;
 };
 
