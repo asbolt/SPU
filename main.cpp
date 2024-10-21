@@ -8,7 +8,8 @@ int main ()
     SPU spu = {};
     stackCtor (&spu.stack, 10);
 
-    readFile (&spu);
+    if (readFile (&spu) == 1)
+        return 1;
 
     while (1)
     {

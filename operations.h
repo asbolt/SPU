@@ -3,7 +3,8 @@
 
 #include "stack.h"
 
-#define FILE_NAME "text.txt"
+#define FILE_NAME "program_code.txt"
+#define ASM_FILE "program.asm"
 
 enum CMD
 {
@@ -21,13 +22,14 @@ enum CMD
 struct SPU
 {
     int code [25] = {};
-    int codeSize = 0;
     Stack stack = {};
-    int id = 0;
+    int regs [3] = {};
+    int ip = 0;
 };
 
-CMD operations (SPU *spu);
-CMD assembler (SPU *spu, FILE *ptrFile);
+int operations (SPU *spu);
+int makeCode (SPU *spu, FILE *ptrFile);
 int readFile (SPU *spu);
+CMD assembler (FILE *ptrFile, FILE *asmFile);
 
 #endif

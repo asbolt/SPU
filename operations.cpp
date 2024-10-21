@@ -3,134 +3,148 @@
 #include "stackUserInterface.h"
 #include <cstring>
 
-CMD operations (SPU *spu)
+int operations (SPU *spu)
 {
+    int cmd = spu->code[spu->ip];
 
-    if (spu->code[spu->id] == 1)
+    switch (cmd)
     {
-        (spu->id)++;
+        case PUSH:
+            {(spu->ip)++;
 
-        int arg = spu->code[spu->id];
-        (spu->id)++;
-        stackPush (&spu->stack, arg, VALUES_FOR_ERROR);
-        
-        return PUSH;
+            int arg = spu->code[spu->ip];
+            (spu->ip)++;
+            stackPush (&spu->stack, arg, VALUES_FOR_ERROR);
+            break;}
 
-    } else if (spu->code[spu->id] == POP)
+        case POP:
+            {(spu->ip)++;
+
+            stackPop (&spu->stack, VALUES_FOR_ERROR);
+            break;}
+
+        case ADD:
+            {(spu->ip)++;
+
+            int term = stackPop (&spu->stack, VALUES_FOR_ERROR);
+            int result = stackPop (&spu->stack, VALUES_FOR_ERROR) + term;
+            stackPush (&spu->stack, result, VALUES_FOR_ERROR);
+            break;}
+
+        case SUB:
+            {(spu->ip)++;
+
+            int subtrahend = stackPop (&spu->stack, VALUES_FOR_ERROR);
+            int result = stackPop (&spu->stack, VALUES_FOR_ERROR) - subtrahend;
+            stackPush (&spu->stack, result, VALUES_FOR_ERROR);
+            break;}
+
+        case MUL:
+            {(spu->ip)++;
+
+            int result = stackPop (&spu->stack, VALUES_FOR_ERROR) * stackPop (&spu->stack, VALUES_FOR_ERROR);
+            stackPush (&spu->stack, result, VALUES_FOR_ERROR);
+            break;}
+
+        case DIV:
+            {(spu->ip)++;
+
+            int denominator = stackPop (&spu->stack, VALUES_FOR_ERROR);
+            int result = stackPop (&spu->stack, VALUES_FOR_ERROR) / denominator;
+            stackPush (&spu->stack, result, VALUES_FOR_ERROR);
+            break;}
+
+        case OUT:
+            {(spu->ip)++;
+
+            int out = stackPop (&spu->stack, VALUES_FOR_ERROR);
+            printf ("\n%d\n\n", out);
+            break;}
+
+        case HLT:
+            {return -1;}
+    
+        default:
+            {return - 2;}
+    }
+
+    return 0;
+}
+
+int makeCode (SPU *spu, FILE *asmFile)
+{
+    int cmd = 0;
+    fscanf (asmFile, "%d", &cmd);
+
+    if (cmd == 1)
     {
-        (spu->id)++;
+        spu->code[spu->ip] = PUSH;
+        (spu->ip)++;
 
-        stackPop (&spu->stack, VALUES_FOR_ERROR);
-        return POP;
+        fscanf (asmFile, "%d", &spu->code[spu->ip]);
+        (spu->ip)++;
 
-    } else if (spu->code[spu->id] == ADD)
-    {
-        (spu->id)++;
+        return 0;
 
-        int term = stackPop (&spu->stack, VALUES_FOR_ERROR);
-        int result = stackPop (&spu->stack, VALUES_FOR_ERROR) + term;
-        stackPush (&spu->stack, result, VALUES_FOR_ERROR);
-        return ADD;
-
-    } else if (spu->code[spu->id] == SUB)
-    {
-        (spu->id)++;
-
-        int subtrahend = stackPop (&spu->stack, VALUES_FOR_ERROR);
-        int result = stackPop (&spu->stack, VALUES_FOR_ERROR) - subtrahend;
-        stackPush (&spu->stack, result, VALUES_FOR_ERROR);
-        return SUB;
-
-    } else if (spu->code[spu->id] == MUL)
-    {
-        (spu->id)++;
-
-        int result = stackPop (&spu->stack, VALUES_FOR_ERROR) * stackPop (&spu->stack, VALUES_FOR_ERROR);
-        stackPush (&spu->stack, result, VALUES_FOR_ERROR);
-        return MUL;
-
-    } else if (spu->code[spu->id] == DIV)
-    {
-        (spu->id)++;
-
-        int denominator = stackPop (&spu->stack, VALUES_FOR_ERROR);
-        int result = stackPop (&spu->stack, VALUES_FOR_ERROR) / denominator;
-        stackPush (&spu->stack, result, VALUES_FOR_ERROR);
-        return DIV;
-
-    } else if (spu->code[spu->id] == OUT)
-    {
-        (spu->id)++;
-
-        int out = stackPop (&spu->stack, VALUES_FOR_ERROR);
-        printf ("\n%d\n\n", out);
-        return OUT;
-
-    } else if (spu->code[spu->id] == -1)
-    {
-        return HLT;
-
+    } else if (cmd == -1) {
+        spu->code[spu->ip] = cmd;
+        (spu->ip)++;
+        return -1;
     } else {
-
-        printf ("Syntax error\n");
-        return ERROR;
+        spu->code[spu->ip] = cmd;
+        (spu->ip)++;
+        return 0;
     }
 }
 
-CMD assembler (SPU *spu, FILE *ptrFile)
+CMD assembler (FILE *ptrFile, FILE *asmFile)
 {
-    int cmd = 0;
-    fscanf (ptrFile, "%d", &cmd);
+    char cmd [10] = {};
+    fscanf (ptrFile, "%s", cmd);
 
-    if (cmd == PUSH)
+    if (strcmp(cmd, "PUSH") == 0)
     {
-        spu->code[spu->codeSize] = PUSH;
-        (spu->codeSize)++;
+        fprintf (asmFile, "%d ", PUSH);
 
-        fscanf (ptrFile, "%d", &spu->code[spu->codeSize]);
-        (spu->codeSize)++;
+        int arg = 0;
+        fscanf (ptrFile, "%d", &arg);
+        fprintf (asmFile, "%d ", arg);
 
         return PUSH;
 
-    } else if (cmd == POP)
+    } else if (strcmp(cmd, "POP") == 0)
     {
-        spu->code[spu->codeSize] = POP;
-        (spu->codeSize)++;
+        fprintf (asmFile, "%d ", POP);
         return POP;
 
-    } else if (cmd == ADD)
+    } else if (strcmp(cmd, "ADD") == 0)
     {
-        spu->code[spu->codeSize] = ADD;
-        (spu->codeSize)++;
+        fprintf (asmFile, "%d ", ADD);
         return ADD;
 
-    } else if (cmd == SUB)
+    } else if (strcmp(cmd, "SUB") == 0)
     {
-        spu->code[spu->codeSize] = SUB;
-        (spu->codeSize)++;
+        fprintf (asmFile, "%d ", SUB);
         return SUB;
 
-    } else if (cmd == MUL)
+    } else if (strcmp(cmd, "MUL") == 0)
     {
-        spu->code[spu->codeSize] = MUL;
-        (spu->codeSize)++;
+        fprintf (asmFile, "%d ", MUL);
         return MUL;
 
-    } else if (cmd == DIV)
+    } else if (strcmp(cmd, "DIV") == 0)
     {
-        spu->code[spu->codeSize] = DIV;
-        (spu->codeSize)++;
+        fprintf (asmFile, "%d ", DIV);
         return DIV;
 
-    } else if (cmd == OUT)
+    } else if (strcmp(cmd, "OUT") == 0)
     {
-        spu->code[spu->codeSize] = OUT;
-        (spu->codeSize)++;
+        fprintf (asmFile, "%d ", OUT);
         return OUT;
 
-    } else if (cmd == HLT)
+    } else if (strcmp(cmd, "HLT") == 0)
     {
-        spu->code[spu->codeSize] = HLT;
+        fprintf (asmFile, "%d ", HLT);
         return HLT;
 
     } else {
@@ -148,9 +162,41 @@ int readFile (SPU *spu)
         return 1;
     }
 
+    FILE * asmFile = fopen (ASM_FILE, "wb");
+    if (asmFile == NULL)
+    {
+        return ERROR;
+    }
+
     while (1)
     {
-        if (assembler (spu, ptrFile) < 0)
+        int result = assembler(ptrFile, asmFile);
+
+        if (result < -1)
+        {
             return 1;
+        }
+
+        if (result < 0)
+        {
+            fclose (asmFile);
+
+            FILE * asmFileRead = fopen (ASM_FILE, "rb");
+            if (asmFileRead == NULL)
+            {
+                return ERROR;
+            }
+
+            while (1)
+            {
+                if (makeCode(spu, asmFile) < 0)
+                {
+                    spu->ip = 0;
+                    return 0;
+                }
+            }
+
+        }
+            
     }
 }
