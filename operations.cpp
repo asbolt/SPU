@@ -323,6 +323,8 @@ int readFile (SPU *spu)
         return ERROR;
     }
 
+    sign (asmFile, ptrFile);
+
     while (1)
     {
         int result = assembler(ptrFile, asmFile);
@@ -342,9 +344,11 @@ int readFile (SPU *spu)
                 return ERROR;
             }
 
+            codeCtor (checkSign (asmFileRead), spu);
+
             while (1)
             {
-                if (makeCode(spu, asmFile) < 0)
+                if (makeCode(spu, asmFileRead) < 0)
                 {
                     spu->ip = 0;
                     return 0;
@@ -352,4 +356,73 @@ int readFile (SPU *spu)
             }
         }      
     }
+}
+
+int sign (FILE *asmFile, FILE *ptrFile)
+{
+    fprintf (asmFile, "%s ", SIGN);
+    fprintf (asmFile, "%d ", VERSION);
+
+    fseek (ptrFile, 0, SEEK_END);
+    int size = ftell (ptrFile);
+    fseek (ptrFile, 0, SEEK_SET);
+
+    char *buffer = NULL;
+    buffer = (char *)calloc (size, sizeof(char));
+    if (buffer == NULL)
+    {
+        return ERROR;
+    }
+
+    fread (buffer, sizeof(char), size, ptrFile);
+
+    int sizeCode = 0;
+    for (int i = 0; i < size; i++)
+    {
+        if (buffer [i] == ' ')
+            sizeCode++;
+
+        if ((buffer [i] == 'P' && buffer [i + 1] == 'U' && buffer [i + 2] == 'S' && buffer [i + 3] == 'H'))
+        {
+            sizeCode += 2;
+        }
+
+        if (buffer [i] == '+')
+            sizeCode++;
+    }
+
+    fseek (ptrFile, 0, SEEK_SET);
+    
+    fprintf (asmFile, "%d ", sizeCode);
+
+    return 0;
+}
+
+int checkSign (FILE *asmFile)
+{
+    char sign [4] = {};
+    fscanf (asmFile, "%s", sign);
+
+    int version = 0;
+    fscanf (asmFile, "%d", &version);
+    if (version != VERSION)
+    {
+        printf ("The file was compiled with not actual processor version\n");
+        return ERROR;
+    }
+
+    int size = 0;
+    fscanf (asmFile, "%d", &size);
+    return size;
+}
+
+int codeCtor (int size, SPU *spu)
+{
+    spu->code = (int*)calloc(size, sizeof(int));
+    if (spu->code == NULL)
+    {
+        return ERROR;
+    }
+
+    return 0; 
 }
