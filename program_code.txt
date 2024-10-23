@@ -1,6 +1,4 @@
 PUSH 2
-PUSH 2
-
 PUSH [71+AX]
 ADD
 

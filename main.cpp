@@ -1,6 +1,5 @@
-#include "stack.h"
-#include "operations.h"
-#include "stackUserInterface.h"
+#include "spu.h"
+#include "assembler.h"
 
 
 int main ()
@@ -17,7 +16,7 @@ int main ()
 
     while (1)
     {
-        if (operations(&spu) < 0)
+        if (run (&spu) < 0)
         {
             stackDtor (&spu.stack, VALUES_FOR_ERROR);
             return 0;
