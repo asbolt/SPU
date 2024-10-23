@@ -108,6 +108,43 @@ int operations (SPU *spu)
             printf ("\n%d\n\n", out);
             break;}
 
+        case JUMP:
+            {(spu->ip)++;
+
+            spu->ip = spu->code[spu->ip];
+            break;}
+
+        case JA:
+            {(spu->ip)++;
+            int a = stackPop(&spu->stack, VALUES_FOR_ERROR);
+            if (a < stackPop(&spu->stack, VALUES_FOR_ERROR))
+            {
+                spu->ip = spu->code[spu->ip];
+            } else {
+                (spu->ip)++;
+            }
+
+            break;}
+
+        case JB:
+            {(spu->ip)++;
+            int a = stackPop(&spu->stack, VALUES_FOR_ERROR);
+            if (a > stackPop(&spu->stack, VALUES_FOR_ERROR))
+            {
+                spu->ip = spu->code[spu->ip];
+            } else {
+                (spu->ip)++;
+            }
+
+            break;}
+
+        case LABEL:
+            {(spu->ip)++;
+
+            spu->labels.labelIp[spu->ip];
+            (spu->ip)++;
+            break;}
+
         case HLT:
             {return -1;}
     
@@ -144,7 +181,7 @@ int makeCode (SPU *spu, FILE *asmFile)
     }
 }
 
-CMD assembler (FILE *ptrFile, FILE *asmFile)
+CMD assembler (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip)
 {
     char cmd [10] = {};
     fscanf (ptrFile, "%s", cmd);
@@ -152,6 +189,7 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
     if (strcmp(cmd, "PUSH") == 0)
     {
         fprintf (asmFile, "%d ", PUSH);
+        (*ip)++;
 
         int arg = 0;
         char str[2] = {};
@@ -160,7 +198,9 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
         if (fscanf (ptrFile, "%d", &arg) == 1)
         {
             fprintf (asmFile, "%d ", 1);
+            (*ip)++;
             fprintf (asmFile, "%d ", arg);
+            (*ip)++;
             
         } else if (fscanf (ptrFile, "%s", str) == 1)
         {
@@ -174,18 +214,23 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
                         if (str[0] == '+')
                         {
                             fprintf (asmFile, "%d ", 8);
+                            (*ip)++;
                             fprintf (asmFile, "%d ", arg);
+                            (*ip)++;
                             fscanf (ptrFile, "%s", reg);
 
                             if (strcmp(reg, "AX") == 0)
                             {
                                 fprintf (asmFile, "%d ", 1);
+                                (*ip)++;
                             } else if (strcmp(reg, "BX") == 0)
                             {
                                 fprintf (asmFile, "%d ", 2);
+                                (*ip)++;
                             } else if (strcmp(reg, "CX") == 0)
                             {
                                 fprintf (asmFile, "%d ", 3);
+                                (*ip)++;
                             } else {
                                 printf ("Syntax error\n");
                                 return ERROR;
@@ -203,7 +248,9 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
                         } else if (str[0] == ']')
                         {
                             fprintf (asmFile, "%d ", 7);
+                            (*ip)++;
                             fprintf (asmFile, "%d ", arg);
+                            (*ip)++;
                             return PUSH;
                         } else 
                         {
@@ -218,15 +265,21 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
                         if (strcmp(reg, "AX") == 0)
                         {
                             fprintf (asmFile, "%d ", 9);
+                            (*ip)++;
                             fprintf (asmFile, "%d ", 1);
+                            (*ip)++;
                         } else if (strcmp(reg, "BX") == 0)
                         {
                             fprintf (asmFile, "%d ", 9);
+                            (*ip)++;
                             fprintf (asmFile, "%d ", 2);
+                            (*ip)++;
                         } else if (strcmp(reg, "CX") == 0)
                         {
                             fprintf (asmFile, "%d ", 9);
+                            (*ip)++;
                             fprintf (asmFile, "%d ", 3);
+                            (*ip)++;
                         } else {
                             printf ("Syntax error\n");
                             return ERROR;
@@ -248,16 +301,20 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
             } else if (str[1] == 'X')
             {
                 fprintf (asmFile, "%d ", 2);
+                (*ip)++;
 
                 if (strcmp(str, "AX") == 0)
                 {
                     fprintf (asmFile, "%d ", 1);
+                    (*ip)++;
                 } else if (strcmp(str, "BX") == 0)
                 {
                     fprintf (asmFile, "%d ", 2);
+                    (*ip)++;
                 } else if (strcmp(str, "CX") == 0)
                 {
                     fprintf (asmFile, "%d ", 3);
+                    (*ip)++;
                 } else {
                     printf ("Syntax error\n");
                     return ERROR;
@@ -270,42 +327,153 @@ CMD assembler (FILE *ptrFile, FILE *asmFile)
     } else if (strcmp(cmd, "POP") == 0)
     {
         fprintf (asmFile, "%d ", POP);
+        (*ip)++;
         return POP;
 
     } else if (strcmp(cmd, "ADD") == 0)
     {
         fprintf (asmFile, "%d ", ADD);
+        (*ip)++;
         return ADD;
 
     } else if (strcmp(cmd, "SUB") == 0)
     {
         fprintf (asmFile, "%d ", SUB);
+        (*ip)++;
         return SUB;
 
     } else if (strcmp(cmd, "MUL") == 0)
     {
         fprintf (asmFile, "%d ", MUL);
+        (*ip)++;
         return MUL;
 
     } else if (strcmp(cmd, "DIV") == 0)
     {
         fprintf (asmFile, "%d ", DIV);
+        (*ip)++;
         return DIV;
 
     } else if (strcmp(cmd, "OUT") == 0)
     {
         fprintf (asmFile, "%d ", OUT);
+        (*ip)++;
         return OUT;
+
+    } else if (strcmp(cmd, "JUMP") == 0)
+    {
+        fprintf (asmFile, "%d ", JUMP);
+        (*ip)++;
+        int arg = 0;
+        char label [15] = {};
+
+        if (fscanf (ptrFile, "%d", &arg) == 1)
+        {
+            fprintf (asmFile, "%d ", arg);
+            (*ip)++;
+            return JUMP;
+        } else if (fscanf (ptrFile, "%s", label) == 1)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                if (strcmp(label, labels->labelName[i]) == 0)
+                {
+                    fprintf (asmFile, "%d ", labels->labelIp[i]);
+                    (*ip)++;
+                    return JUMP;
+                }
+            }
+                (*ip)++;
+        }
+        return JUMP;
+
+    } else if (strcmp(cmd, "JA") == 0)
+    {
+        fprintf (asmFile, "%d ", JA);
+        (*ip)++;
+        int arg = 0;
+        char label [15] = {};
+
+        if (fscanf (ptrFile, "%d", &arg) == 1)
+        {
+            fprintf (asmFile, "%d ", arg);
+            (*ip)++;
+            return JA;
+        } else if (fscanf (ptrFile, "%s", label) == 1)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                if (strcmp(label, labels->labelName[i]) == 0)
+                {
+                    fprintf (asmFile, "%d ", labels->labelIp[i]);
+                    (*ip)++;
+                    return JA;
+                }
+            }
+                (*ip)++;
+        }
+
+        return JA;
+
+    } else if (strcmp(cmd, "JB") == 0)
+    {
+        fprintf (asmFile, "%d ", JB);
+        (*ip)++;
+        int arg = 0;
+        char label [15] = {};
+
+        if (fscanf (ptrFile, "%d", &arg) == 1)
+        {
+            fprintf (asmFile, "%d ", arg);
+            (*ip)++;
+            return JB;
+        } else if (fscanf (ptrFile, "%s", label) == 1)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                if (strcmp(label, labels->labelName[i]) == 0)
+                {
+                    fprintf (asmFile, "%d ", labels->labelIp[i]);
+                    (*ip)++;
+                    return JB;
+                }
+            }
+                (*ip)++;
+        }
+
+        return JB;
 
     } else if (strcmp(cmd, "HLT") == 0)
     {
         fprintf (asmFile, "%d ", HLT);
+        (*ip)++;
         return HLT;
 
     } else {
+        if (strchr(cmd, ':') != 0)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                if (strcmp(labels->labelName[i], cmd) == 0)
+                {
+                    return LABEL;
+                }
+            }
 
-        printf ("Syntax error\n");
-        return ERROR;
+            for (int i = 0; cmd[i] != '\0'; i++)
+            {
+                labels->labelName[labels->labelNumber][i] = cmd[i];
+            }
+
+            labels->labelIp[labels->labelNumber] = *ip;
+
+            (labels->labelNumber)++;
+
+            return LABEL;
+        } else {
+            printf ("Syntax error\n");
+            return ERROR;
+        }
     }
 }
 
@@ -325,9 +493,27 @@ int readFile (SPU *spu)
 
     sign (asmFile, ptrFile);
 
+    Labels labels = {};
+    int ip = 0;
+
+    firstComp (ptrFile, asmFile, &labels, &ip);
+
+    ip = 0;
+
+    fseek (ptrFile, 0, SEEK_SET);
+    fclose (asmFile);
+
+    FILE * asmFile1 = fopen (ASM_FILE, "wb");
+    if (asmFile == NULL)
+    {
+        return ERROR;
+    }
+
+    sign (asmFile1, ptrFile);
+
     while (1)
     {
-        int result = assembler(ptrFile, asmFile);
+        int result = assembler(ptrFile, asmFile1, &labels, &ip);
 
         if (result < -1)
         {
@@ -336,7 +522,7 @@ int readFile (SPU *spu)
 
         if (result < 0)
         {
-            fclose (asmFile);
+            fclose (asmFile1);
 
             FILE * asmFileRead = fopen (ASM_FILE, "rb");
             if (asmFileRead == NULL)
@@ -356,6 +542,7 @@ int readFile (SPU *spu)
             }
         }      
     }
+
 }
 
 int sign (FILE *asmFile, FILE *ptrFile)
@@ -379,7 +566,7 @@ int sign (FILE *asmFile, FILE *ptrFile)
     int sizeCode = 0;
     for (int i = 0; i < size; i++)
     {
-        if (buffer [i] == ' ')
+        if (buffer [i] == '\n')
             sizeCode++;
 
         if ((buffer [i] == 'P' && buffer [i + 1] == 'U' && buffer [i + 2] == 'S' && buffer [i + 3] == 'H'))
@@ -387,12 +574,32 @@ int sign (FILE *asmFile, FILE *ptrFile)
             sizeCode += 2;
         }
 
+        if ((buffer [i] == 'P' && buffer [i + 1] == 'O' && buffer [i + 2] == 'P'))
+        {
+            sizeCode += 2;
+        }
+
+        if ((buffer [i] == 'J' && buffer [i + 1] == 'U' && buffer [i + 2] == 'M' && buffer [i + 3] == 'P'))
+        {
+            sizeCode++;
+        }
+
+        if ((buffer [i] == 'J' && buffer [i + 1] == 'A'))
+        {
+            sizeCode++;
+        }
+
+        if ((buffer [i] == 'J' && buffer [i + 1] == 'B'))
+        {
+            sizeCode ++;
+        }
+
         if (buffer [i] == '+')
             sizeCode++;
     }
 
     fseek (ptrFile, 0, SEEK_SET);
-    
+
     fprintf (asmFile, "%d ", sizeCode);
 
     return 0;
@@ -425,4 +632,22 @@ int codeCtor (int size, SPU *spu)
     }
 
     return 0; 
+}
+
+int firstComp (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip)
+{
+    while (1)
+    {
+        int result = assembler(ptrFile, asmFile, labels, ip);
+
+        if (result < -1)
+        {
+            return 1;
+        }
+
+        if (result < 0)
+        {
+            return 0;
+        }      
+    }
 }

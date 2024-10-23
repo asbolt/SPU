@@ -17,14 +17,19 @@ enum CMD
     MUL = 5,
     DIV = 6,
     OUT = 7,
+    JUMP = 11,
+    JA = 12,
+    JB = 13,
+    LABEL = 21,
     HLT = -1,
     ERROR = -2
 };
 
-struct Label
+struct Labels 
 {
-    char name [15] = {};
-    int ip = 0;
+    char labelName [10][15] = {};
+    int labelIp [10] = {};
+    int labelNumber = 0;
 };
 
 struct SPU
@@ -32,7 +37,9 @@ struct SPU
     int *code = NULL;
     Stack stack = {};
     int regs [4] = {};
-    Label labels [10] = {};
+
+    Labels labels = {};
+
     int RAM [100] = {};
     int ip = 0;
 };
@@ -40,9 +47,10 @@ struct SPU
 int operations (SPU *spu);
 int makeCode (SPU *spu, FILE *ptrFile);
 int readFile (SPU *spu);
-CMD assembler (FILE *ptrFile, FILE *asmFile);
+CMD assembler (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip);
 int sign (FILE *asmFile, FILE *ptrFile);
 int checkSign (FILE *asmFile);
 int codeCtor (int size, SPU *spu);
+int firstComp (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip);
 
 #endif 
