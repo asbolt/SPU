@@ -12,7 +12,7 @@ int main ()
         return 1;
 
     spu.regs[1] = 7;
-    spu.RAM[7] = 1;
+    spu.RAM[78] = 1;
     spu.RAM[9] = 3;
 
     while (1)

@@ -15,7 +15,7 @@ int operations (SPU *spu)
             int type = spu->code[spu->ip];
             (spu->ip)++;
 
-            if (type == 9)
+            if (type == 3)
             {
                 int address = spu->regs[spu->code[spu->ip]];
                 (spu->ip)++;
@@ -56,9 +56,10 @@ int operations (SPU *spu)
 
             if (type == 2)
             {
-                int arg = spu->regs[spu->ip];
+                int arg = spu->regs[spu->code[spu->ip]];
                 (spu->ip)++;
-                stackPush (&spu->stack, spu->regs[arg], VALUES_FOR_ERROR);
+
+                stackPush (&spu->stack, arg, VALUES_FOR_ERROR);
             }
 
             break;
@@ -139,11 +140,7 @@ int operations (SPU *spu)
             break;}
 
         case LABEL:
-            {(spu->ip)++;
-
-            spu->labels.labelIp[spu->ip];
-            (spu->ip)++;
-            break;}
+            break;
 
         case HLT:
             {return -1;}
@@ -192,8 +189,7 @@ CMD assembler (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip)
         (*ip)++;
 
         int arg = 0;
-        char str[2] = {};
-        char reg[2] = {};
+        char str[10] = {};
 
         if (fscanf (ptrFile, "%d", &arg) == 1)
         {
@@ -201,129 +197,136 @@ CMD assembler (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip)
             (*ip)++;
             fprintf (asmFile, "%d ", arg);
             (*ip)++;
-            
+            return PUSH;
+
         } else if (fscanf (ptrFile, "%s", str) == 1)
         {
-            if (str[0] == '[')
+            if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, 'X') == 0)
             {
+                fprintf (asmFile, "%d ", 7);
+                (*ip)++;
 
-                if (fscanf (ptrFile, "%d", &arg) == 1)
+                int arg = 0;
+
+                for (int i = 1; strchr(str, '[') + i < strchr(str, ']'); i++)
                 {
-                    if (fscanf (ptrFile, "%s", str) == 1)
-                    {
-                        if (str[0] == '+')
-                        {
-                            fprintf (asmFile, "%d ", 8);
-                            (*ip)++;
-                            fprintf (asmFile, "%d ", arg);
-                            (*ip)++;
-                            fscanf (ptrFile, "%s", reg);
-
-                            if (strcmp(reg, "AX") == 0)
-                            {
-                                fprintf (asmFile, "%d ", 1);
-                                (*ip)++;
-                            } else if (strcmp(reg, "BX") == 0)
-                            {
-                                fprintf (asmFile, "%d ", 2);
-                                (*ip)++;
-                            } else if (strcmp(reg, "CX") == 0)
-                            {
-                                fprintf (asmFile, "%d ", 3);
-                                (*ip)++;
-                            } else {
-                                printf ("Syntax error\n");
-                                return ERROR;
-                            }
-
-                            fscanf (ptrFile, "%s", str);
-                            if (str[0] == ']')
-                            {
-                                return PUSH;
-                            } else {
-                                printf ("Syntax error\n");
-                                return ERROR;
-                            }
-
-                        } else if (str[0] == ']')
-                        {
-                            fprintf (asmFile, "%d ", 7);
-                            (*ip)++;
-                            fprintf (asmFile, "%d ", arg);
-                            (*ip)++;
-                            return PUSH;
-                        } else 
-                        {
-                            printf ("Syntax error\n");
-                            return ERROR;
-                        }
-                    }
-                } else if (fscanf (ptrFile, "%s", reg) == 1)
-                {
-                    if (reg[1] == 'X')
-                    {
-                        if (strcmp(reg, "AX") == 0)
-                        {
-                            fprintf (asmFile, "%d ", 9);
-                            (*ip)++;
-                            fprintf (asmFile, "%d ", 1);
-                            (*ip)++;
-                        } else if (strcmp(reg, "BX") == 0)
-                        {
-                            fprintf (asmFile, "%d ", 9);
-                            (*ip)++;
-                            fprintf (asmFile, "%d ", 2);
-                            (*ip)++;
-                        } else if (strcmp(reg, "CX") == 0)
-                        {
-                            fprintf (asmFile, "%d ", 9);
-                            (*ip)++;
-                            fprintf (asmFile, "%d ", 3);
-                            (*ip)++;
-                        } else {
-                            printf ("Syntax error\n");
-                            return ERROR;
-                        }
-                    } else {
-                        printf ("Syntax error\n");
-                        return ERROR;
-                    }
-
-                    fscanf (ptrFile, "%s", str);
-                            if (str[0] == ']')
-                            {
-                                return PUSH;
-                            } else {
-                                printf ("Syntax error\n");
-                                return ERROR;
-                            }
+                    arg = arg*10 + *(strchr(str, '[') + i) - 48;
                 }
-            } else if (str[1] == 'X')
+
+                fprintf (asmFile, "%d ", arg);
+                (*ip)++;
+                return PUSH;
+
+            } else if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, '+') != 0 && strchr(str, 'X') != 0 && strchr(str, 'A') != 0 && strchr(str, 'X') == strchr(str, 'A') + 1)
+            {
+                fprintf (asmFile, "%d ", 8);
+                (*ip)++;
+
+                int arg = 0;
+                for (int i = 1; strchr(str, '[') + i < strchr(str, '+'); i++)
+                {
+                    arg = arg*10 + *(strchr(str, '[') + i) - 48;
+                }
+
+                fprintf (asmFile, "%d ", arg);
+                (*ip)++;
+
+                fprintf (asmFile, "%d ", 1);
+                (*ip)++;
+                return PUSH;
+
+            } else if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, '+') != 0 && strchr(str, 'X') != 0 && strchr(str, 'B') != 0 && strchr(str, 'X') == strchr(str, 'B') + 1)
+            {
+                fprintf (asmFile, "%d ", 8);
+                (*ip)++;
+
+                int arg = 0;
+                for (int i = 1; strchr(str, '[') + i < strchr(str, '+'); i++)
+                {
+                    arg = arg*10 + *(strchr(str, '[') + i) - 48;
+                }
+
+                fprintf (asmFile, "%d ", arg);
+                (*ip)++;
+
+                fprintf (asmFile, "%d ", 2);
+                (*ip)++;
+                return PUSH;
+                
+            } else if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, '+') != 0 && strchr(str, 'X') != 0 && strchr(str, 'C') != 0 && strchr(str, 'X') == strchr(str, 'C') + 1)
+            {
+                fprintf (asmFile, "%d ", 8);
+                (*ip)++;
+
+                int arg = 0;
+                for (int i = 1; strchr(str, '[') + i < strchr(str, '+'); i++)
+                {
+                    arg = arg*10 + *(strchr(str, '[') + i) - 48;
+                }
+
+                fprintf (asmFile, "%d ", arg);
+                (*ip)++;
+
+                fprintf (asmFile, "%d ", 3);
+                (*ip)++;
+                return PUSH;
+                
+            } else if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, 'X') != 0 && strchr(str, 'A') != 0 && strchr(str, 'X') == strchr(str, 'A') + 1)
+            {
+                fprintf (asmFile, "%d ", 3);
+                (*ip)++;
+                fprintf (asmFile, "%d ", 1);
+                (*ip)++;
+                return PUSH;
+
+            } else if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, 'X') != 0 && strchr(str, 'B') != 0 && strchr(str, 'X') == strchr(str, 'B') + 1)
+            {
+                fprintf (asmFile, "%d ", 3);
+                (*ip)++;
+                fprintf (asmFile, "%d ", 2);
+                (*ip)++;
+                return PUSH;
+                
+            } else if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, 'X') != 0 && strchr(str, 'C') != 0 && strchr(str, 'X') == strchr(str, 'C') + 1)
+            {
+                fprintf (asmFile, "%d ", 3);
+                (*ip)++;
+                fprintf (asmFile, "%d ", 3);
+                (*ip)++;
+                return PUSH;
+                
+            } else if (strchr(str, 'X') != 0 && strchr(str, 'A') != 0 && strchr(str, 'X') == strchr(str, 'A') + 1)
             {
                 fprintf (asmFile, "%d ", 2);
                 (*ip)++;
+                fprintf (asmFile, "%d ", 1);
+                (*ip)++;
+                return PUSH;
 
-                if (strcmp(str, "AX") == 0)
-                {
-                    fprintf (asmFile, "%d ", 1);
-                    (*ip)++;
-                } else if (strcmp(str, "BX") == 0)
-                {
-                    fprintf (asmFile, "%d ", 2);
-                    (*ip)++;
-                } else if (strcmp(str, "CX") == 0)
-                {
-                    fprintf (asmFile, "%d ", 3);
-                    (*ip)++;
-                } else {
-                    printf ("Syntax error\n");
-                    return ERROR;
-                }
+            } else if (strchr(str, 'X') != 0 && strchr(str, 'B') != 0 && strchr(str, 'X') == strchr(str, 'B') + 1)
+            {
+                fprintf (asmFile, "%d ", 2);
+                (*ip)++;
+                fprintf (asmFile, "%d ", 2);
+                (*ip)++;
+                return PUSH;
+                
+            } else if (strchr(str, 'X') != 0 && strchr(str, 'C') != 0 && strchr(str, 'X') == strchr(str, 'C') + 1)
+            {
+                fprintf (asmFile, "%d ", 2);
+                (*ip)++;
+                fprintf (asmFile, "%d ", 3);
+                (*ip)++;
+                return PUSH;
+                
+            } else {
+                printf ("Syntax error\n");
+                return ERROR;
             }
+        } else {
+                printf ("Syntax error\n");
+                return ERROR;
         }
-
-        return PUSH;
-
     } else if (strcmp(cmd, "POP") == 0)
     {
         fprintf (asmFile, "%d ", POP);
