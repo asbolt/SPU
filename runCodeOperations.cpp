@@ -191,9 +191,27 @@ int makeCode (SPU *spu, FILE *asmFile)
             return HLT;
 
         } else {
-            
+
             spu->code[spu->ip] = cmd;
             (spu->ip)++;
             return 0;
         }
     }
+
+int codeCtor (int size, SPU *spu)
+    {
+        spu->code = (int*)calloc((size_t)size, sizeof(int));
+        if (spu->code == NULL)
+        {
+            return ERROR;
+        }
+
+        return 0; 
+    }
+
+int codeDtor (SPU *spu)
+{
+    free (spu->code);
+
+    return 0;
+}

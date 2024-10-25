@@ -13,5 +13,6 @@
 int run (SPU *spu);
 int makeCode (SPU *spu, FILE *ptrFile);
 int codeCtor (int size, SPU *spu);
+int codeDtor (SPU *spu);
 
 #endif 

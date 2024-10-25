@@ -6,17 +6,17 @@ int sign (FILE *asmFile, FILE *ptrFile)
         fprintf (asmFile, "%d ", VERSION);
 
         fseek (ptrFile, 0, SEEK_END);
-        int size = ftell (ptrFile);
+        int size = (int)ftell (ptrFile);
         fseek (ptrFile, 0, SEEK_SET);
 
         char *buffer = NULL;
-        buffer = (char *)calloc (size, sizeof(char));
+        buffer = (char *)calloc ((size_t)size, sizeof(char));
         if (buffer == NULL)
         {
             return ERROR;
         }
 
-        fread (buffer, sizeof(char), size, ptrFile);
+        fread (buffer, sizeof(char), (size_t)size, ptrFile);
 
         int sizeCode = 0;
         for (int i = 0; i < size; i++)
@@ -76,15 +76,4 @@ int checkSign (FILE *asmFile)
         int size = 0;
         fscanf (asmFile, "%d", &size);
         return size;
-    }
-
-int codeCtor (int size, SPU *spu)
-    {
-        spu->code = (int*)calloc(size, sizeof(int));
-        if (spu->code == NULL)
-        {
-            return ERROR;
-        }
-
-        return 0; 
     }

@@ -95,11 +95,11 @@ CMD assembler (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip)
                     fprintf (asmFile, "%d ", RAM_ARG);
                     (*ip)++;
 
-                    int arg = 0;
+                    int argRam = 0;
 
                     for (int i = 1; strchr(str, '[') + i < strchr(str, ']'); i++)
                     {
-                        arg = arg*10 + *(strchr(str, '[') + i) - 48;
+                        argRam = argRam*10 + *(strchr(str, '[') + i) - 48;
                     }
 
                     fprintf (asmFile, "%d ", arg);

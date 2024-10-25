@@ -19,6 +19,7 @@ int main ()
         if (run (&spu) < 0)
         {
             stackDtor (&spu.stack, VALUES_FOR_ERROR);
+            codeDtor(&spu);
             return 0;
         }
     }
