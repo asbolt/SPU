@@ -3,7 +3,7 @@
 
 #include "spu.h"
 
-int sign (FILE *asmFile, FILE *ptrFile);
-int checkSign (FILE *asmFile);
+int writeSignature (FILE *binFile, FILE *asmFile);
+int checkSignature (FILE *binFile);
 
 #endif

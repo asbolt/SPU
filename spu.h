@@ -5,10 +5,23 @@
 #include "stackUserInterface.h"
 #include <cstring>
 
-#define FILE_NAME "program_code.txt"
-#define ASM_FILE "program.asm"
+#define ASM_FILE "program_code.txt"
+#define BINARY_FILE "program.asm"
 #define SIGN "ABED"
 #define VERSION 2
+#define DEFAULT_STACK_SIZE 10
+
+const int sizeLabel = 15;
+const int numberLabels = 10;
+const int DEFAULT_REG_SIZE = 4;
+const int DEFAULT_RAM_SIZE = 100;
+const int basisNumberSystem = 10;
+
+enum ERROR_CODES
+{
+    CORRECT_ = 0,
+    ERROR_ = 1
+};
 
 enum REGS
 {
@@ -45,19 +58,27 @@ enum CMD
 
 struct Labels 
 {
-    char labelName [10][15] = {};
-    int labelIp [10]        = {};
-    int labelNumber         = 0;
+    char **labelName;
+    int *labelIp;
+    int labelNumber = 0;
 };
 
 struct SPU
 {
-    int *code     = NULL;
-    Stack stack   = {};
-    int regs [4]  = {};
-    Labels labels = {};
-    int RAM [100] = {};
-    int ip        = 0;
+    int *code      = NULL;
+    Stack stack    = {};
+    int *regs      = NULL;
+    Labels labels  = {};
+    int *RAM       = NULL;
+    int ip         = 0;
 };
+
+ERROR_CODES labelCtor (Labels *labels);
+ERROR_CODES labelDtor (Labels *labels);
+ERROR_CODES codeArrayCtor (int size, SPU *spu);
+ERROR_CODES codeArrayDtor (int *code);
+ERROR_CODES spuCtor (SPU *spu, int size);
+ERROR_CODES spuDtor (SPU *spu);
+
 
 #endif

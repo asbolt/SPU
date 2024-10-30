@@ -3,8 +3,10 @@
 #include "stackUserInterface.h"
 #include <cstring>
 
-    int run (SPU *spu)
+int runCodeCommand (SPU *spu)
     {
+        assert (spu);
+
         int cmd = spu->code[spu->ip];
 
         switch (cmd)
@@ -179,10 +181,13 @@
         return 0;
     }
 
-int makeCode (SPU *spu, FILE *asmFile)
+int readCode (SPU *spu, FILE *binFile)
     {
+        assert (spu);
+        assert (binFile);
+
         int cmd = 0;
-        fscanf (asmFile, "%d", &cmd);
+        fscanf (binFile, "%d", &cmd);
 
         if (cmd == HLT) 
         {
@@ -196,22 +201,44 @@ int makeCode (SPU *spu, FILE *asmFile)
             (spu->ip)++;
             return 0;
         }
+
+       return -1;
     }
 
-int codeCtor (int size, SPU *spu)
+int makeCode (SPU *spu)
     {
-        spu->code = (int*)calloc((size_t)size, sizeof(int));
-        if (spu->code == NULL)
-        {
-            return ERROR;
-        }
+            FILE * binFileRead = fopen (BINARY_FILE, "rb");
+            if (binFileRead == NULL)
+            {
+                return ERROR_;
+            }
 
-        return 0; 
+            spuCtor (spu, checkSignature (binFileRead));
+
+            while (true)
+            {
+                if (readCode(spu, binFileRead) < CORRECT_)
+                {
+                    spu->ip = 0;
+                    return CORRECT_;
+                }
+            }
+
+           fclose (binFileRead);
+
+            return CORRECT_;
     }
 
-int codeDtor (SPU *spu)
+int runCode (SPU *spu)
 {
-    free (spu->code);
+    while (true)
+    {
+        if (runCodeCommand (spu) < CORRECT_)
+        {
+            spuDtor (spu);
+            return 0;
+        }
+    }
 
-    return 0;
+    return 1;
 }

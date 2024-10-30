@@ -1,13 +1,16 @@
 #include "sign.h"
 
-int sign (FILE *asmFile, FILE *ptrFile)
+int writeSignature (FILE *binFile, FILE *asmFile)
     {
-        fprintf (asmFile, "%s ", SIGN);
-        fprintf (asmFile, "%d ", VERSION);
+        assert (binFile);
+        assert (asmFile);
+        
+        fprintf (binFile, "%s ", SIGN);
+        fprintf (binFile, "%d ", VERSION);
 
-        fseek (ptrFile, 0, SEEK_END);
-        int size = (int)ftell (ptrFile);
-        fseek (ptrFile, 0, SEEK_SET);
+        fseek (asmFile, 0, SEEK_END);
+        int size = (int)ftell (asmFile);
+        fseek (asmFile, 0, SEEK_SET);
 
         char *buffer = NULL;
         buffer = (char *)calloc ((size_t)size, sizeof(char));
@@ -16,13 +19,15 @@ int sign (FILE *asmFile, FILE *ptrFile)
             return ERROR;
         }
 
-        fread (buffer, sizeof(char), (size_t)size, ptrFile);
+        fread (buffer, sizeof(char), (size_t)size, asmFile);
 
         int sizeCode = 0;
         for (int i = 0; i < size; i++)
         {
             if (buffer [i] == '\n')
+            {
                 sizeCode++;
+            }
 
             if ((buffer [i] == 'P' && buffer [i + 1] == 'U' && buffer [i + 2] == 'S' && buffer [i + 3] == 'H'))
             {
@@ -50,23 +55,25 @@ int sign (FILE *asmFile, FILE *ptrFile)
             }
 
             if (buffer [i] == '+')
+            {
                 sizeCode++;
+            }
         }
 
-        fseek (ptrFile, 0, SEEK_SET);
+        fseek (asmFile, 0, SEEK_SET);
 
-        fprintf (asmFile, "%d ", sizeCode);
+        fprintf (binFile, "%d ", sizeCode);
 
         return 0;
     }
 
-int checkSign (FILE *asmFile)
+int checkSignature (FILE *binFile)
     {
         char sign [4] = {};
-        fscanf (asmFile, "%s", sign);
+        fscanf (binFile, "%s", sign);
 
         int version = 0;
-        fscanf (asmFile, "%d", &version);
+        fscanf (binFile, "%d", &version);
         if (version != VERSION)
         {
             printf ("The file was compiled with not actual processor version\n");
@@ -74,6 +81,6 @@ int checkSign (FILE *asmFile)
         }
 
         int size = 0;
-        fscanf (asmFile, "%d", &size);
+        fscanf (binFile, "%d", &size);
         return size;
     }

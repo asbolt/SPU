@@ -4,15 +4,9 @@
 #include "spu.h"
 #include "sign.h"
 
-#define FILE_NAME "program_code.txt"
-#define ASM_FILE  "program.asm"
-#define SIGN      "ABED"
-#define VERSION   2
-
-
-int run (SPU *spu);
-int makeCode (SPU *spu, FILE *ptrFile);
-int codeCtor (int size, SPU *spu);
-int codeDtor (SPU *spu);
+int runCodeCommand (SPU *spu);
+int readCode (SPU *spu, FILE *asmFile);
+int makeCode (SPU *spu);
+int runCode (SPU *spu);
 
 #endif 

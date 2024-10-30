@@ -5,12 +5,14 @@
 #include "sign.h"
 #include "runCodeOperations.h"
 
-int readFile (SPU *spu);
-CMD assembler (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip);
-int firstComp (FILE *ptrFile, FILE *asmFile, Labels *labels, int *ip);
-int pushRamArgAndReg (FILE *asmFile, char *str, int *ip, char regLetter, int regNumber);
-int pushRamReg (FILE *asmFile, char *str, int *ip, char regLetter, int regNumber);
-int pushReg (FILE *asmFile, char *str, int *ip, char regLetter, int regNumber);
-int jumps (FILE *ptrFile, FILE *asmFile, char *cmd, int *ip, Labels *labels, const char *jumpType, int jumpNumber);
+const int MAX_COMMAND_SIZE = 10;
+
+ERROR_CODES readFile (SPU *spu);
+CMD makeBinFile (FILE *asmFile, FILE *binFile, Labels *labels, int *ip);
+int seekLabels (FILE *asmFile, FILE *binFile, Labels *labels, int *ip);
+int pushRamArgAndReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber);
+int pushRamReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber);
+int pushReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber);
+int jumps (FILE *asmFile, FILE *binFile, char *cmd, int *ip, Labels *labels, const char *jumpType, int jumpNumber);
 
 #endif

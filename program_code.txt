@@ -1,5 +1,5 @@
-PUSH 2
-PUSH [71+AX]
+PUSH 3
+PUSH 3
 ADD
 
 OUT
