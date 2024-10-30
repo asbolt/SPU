@@ -6,11 +6,6 @@ int main ()
 { 
     SPU spu = {};
 
-    if (readFile (&spu) == ERROR_)
-    {
-        return 1;
-    }
-
     if (makeCode(&spu) == ERROR_)
     {
         return 1;
