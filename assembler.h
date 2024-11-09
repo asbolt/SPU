@@ -6,6 +6,8 @@
 #include "runCodeOperations.h"
 
 const int MAX_COMMAND_SIZE = 10;
+const int RAM_NUMBER = 5;
+const int RAM_WITH_PLUS = 8;
 
 ERROR_CODES readFile (SPU *spu);
 int compilation (FILE *asmFile, FILE *binFile, Labels *labels, int *ip);

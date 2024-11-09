@@ -99,7 +99,7 @@ int readingImmediate (char *str)
         {
             return arg;
         }
-        
+
         arg = arg*10 + *address - '0'; 
 
         step++;
@@ -114,9 +114,9 @@ int checkRAM (char *str)
     {
         if (strchr(str, '+') != 0)
         {
-            return 8;
+            return RAM_WITH_PLUS;
         } else {
-            return 5;
+            return RAM_NUMBER;
         }
     }
 
@@ -125,11 +125,11 @@ int checkRAM (char *str)
 
 int determiningLabel (char *str, Labels *labels, FILE *binFile, int *ip)
 {
-    for (int i = 0; i < MAX_COMMAND_SIZE; i++)
+    for (int label = 0; label < numberLabels; label++)
     {
-        if (strstr(str, labels->labelName[i]) != 0)
+        if (strstr(str, labels->labelName[label]) != 0)
         {
-            fprintf (binFile, "%d ", labels->labelIp[i]);
+            fprintf (binFile, "%d ", labels->labelIp[label]);
             (*ip)++;
             return 1;
         }
