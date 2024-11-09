@@ -165,23 +165,18 @@ int runCodeCommand (SPU *spu)
                     break;
                 }
 
-            case LABEL:
-
-                    break;
-
             case HLT:
-
                     return HLT;
 
+            case LABEL:
             default:
-
                     return ERROR;
         }
 
         return 0;
     }
 
-int readCode (SPU *spu, FILE *binFile)
+int readCommand (SPU *spu, FILE *binFile)
     {
         assert (spu);
         assert (binFile);
@@ -201,11 +196,9 @@ int readCode (SPU *spu, FILE *binFile)
             (spu->ip)++;
             return 0;
         }
-
-       return -1;
     }
 
-int makeCode (SPU *spu)
+int readCode (SPU *spu)
     {
             FILE * binFileRead = fopen (BINARY_FILE, "rb");
             if (binFileRead == NULL)
@@ -217,7 +210,7 @@ int makeCode (SPU *spu)
 
             while (true)
             {
-                if (readCode(spu, binFileRead) < CORRECT_)
+                if (readCommand(spu, binFileRead) < CORRECT_)
                 {
                     spu->ip = 0;
                     return CORRECT_;

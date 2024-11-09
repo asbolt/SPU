@@ -1,12 +1,11 @@
 #include "spu.h"
 #include "assembler.h"
 
-
 int main ()
 { 
     SPU spu = {};
 
-    if (makeCode(&spu) == ERROR_)
+    if (readCode(&spu) == ERROR_)
     {
         return 1;
     }

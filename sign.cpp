@@ -26,37 +26,7 @@ int writeSignature (FILE *binFile, FILE *asmFile)
         {
             if (buffer [i] == '\n')
             {
-                sizeCode++;
-            }
-
-            if ((buffer [i] == 'P' && buffer [i + 1] == 'U' && buffer [i + 2] == 'S' && buffer [i + 3] == 'H'))
-            {
-                sizeCode += 2;
-            }
-
-            if ((buffer [i] == 'P' && buffer [i + 1] == 'O' && buffer [i + 2] == 'P'))
-            {
-                sizeCode += 2;
-            }
-
-            if ((buffer [i] == 'J' && buffer [i + 1] == 'U' && buffer [i + 2] == 'M' && buffer [i + 3] == 'P'))
-            {
-                sizeCode++;
-            }
-
-            if ((buffer [i] == 'J' && buffer [i + 1] == 'A'))
-            {
-                sizeCode++;
-            }
-
-            if ((buffer [i] == 'J' && buffer [i + 1] == 'B'))
-            {
-                sizeCode ++;
-            }
-
-            if (buffer [i] == '+')
-            {
-                sizeCode++;
+                sizeCode += 4;
             }
         }
 

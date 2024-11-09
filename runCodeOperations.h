@@ -5,8 +5,8 @@
 #include "sign.h"
 
 int runCodeCommand (SPU *spu);
-int readCode (SPU *spu, FILE *asmFile);
-int makeCode (SPU *spu);
+int readCommand (SPU *spu, FILE *asmFile);
+int readCode (SPU *spu);
 int runCode (SPU *spu);
 
 #endif 

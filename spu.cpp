@@ -1,5 +1,10 @@
 #include "spu.h"
 
+// TODO переделать структуру лэйблс
+// TODO makefile
+// TODO переименовать файлы
+// TODO вынести файлы в папки
+
 ERROR_CODES labelCtor (Labels *labels)
     {
         labels->labelName = (char**)calloc ((size_t)numberLabels, sizeof(char));
@@ -10,7 +15,7 @@ ERROR_CODES labelCtor (Labels *labels)
 
         for (int i = 0; i < numberLabels; i++)
         {
-            labels->labelName[i] = (char*)calloc ((size_t)sizeLabel, sizeof(char));
+            labels->labelName[i] = (char*)calloc ((size_t)SIZE_LABEL, sizeof(char));
             if (labels->labelName[i] == NULL)
             {
                 return ERROR_;
@@ -95,15 +100,15 @@ ERROR_CODES spuCtor (SPU *spu, int size)
     }
 
 ERROR_CODES spuDtor (SPU *spu)
-{
-    assert (spu);
-
-    codeArrayDtor (spu->code);
-    labelDtor (&spu->labels);
-    stackDtor (&spu->stack, VALUES_FOR_ERROR);
-
-    free (spu->regs);
-    free (spu->RAM);
-
-    return CORRECT_;
-}
+    {
+        assert (spu);
+    
+        codeArrayDtor (spu->code);
+        labelDtor (&spu->labels);
+        stackDtor (&spu->stack, VALUES_FOR_ERROR);
+    
+        free (spu->regs);
+        free (spu->RAM);
+    
+        return CORRECT_;
+    }

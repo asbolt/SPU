@@ -1,4 +1,5 @@
 #include "assembler.h"
+#include "sign.h"
 
 ERROR_CODES readFile (SPU *spu)
     {
@@ -19,323 +20,228 @@ ERROR_CODES readFile (SPU *spu)
         Labels labels = {};
         int ip = 0;
 
-        // TODO use your Onegin as library to read assembly code
-        seekLabels (asmFile, binFile, &labels, &ip);
+        compilation (asmFile, binFile, &labels, &ip);
 
         ip = 0;
-
         fseek (asmFile, 0, SEEK_SET);
-
         fseek (binFile, 0, SEEK_SET);
+
         writeSignature (binFile, asmFile);        
 
-        while (true)
-        {
-            int result = makeBinFile(asmFile, binFile, &labels, &ip);
-            if (result < HLT)
-            {
-                return ERROR_;
-            }
+        compilation (asmFile, binFile, &labels, &ip);
 
-            if (result < CORRECT_)
-            {
-                fclose (binFile);
-
-                return CORRECT_;
-            }      
-        }
+        return CORRECT_;
     }
 
-CMD makeBinFile (FILE *asmFile, FILE *binFile, Labels *labels, int *ip)
+int compilation (FILE *asmFile, FILE *binFile, Labels *labels, int *ip)
     {
         assert (asmFile);
         assert (binFile);
         assert (labels);
         assert (ip);
 
-        // TODO separate functions for: determining register, reading immediate (const), reading command, checking for '[', ']'
-
-        char cmd [MAX_COMMAND_SIZE] = {};
-        fscanf (asmFile, "%s", cmd);
-
-        if (strcmp(cmd, "PUSH") == 0)
+        while (true)
         {
-            fprintf (binFile, "%d ", PUSH);
-            (*ip)++;
-
-            int arg = 0;
-            char str[MAX_COMMAND_SIZE] = {};
-
-            if (fscanf (asmFile, "%d", &arg) == 1)
+            char *str = (char *)calloc (MAX_COMMAND_SIZE, sizeof(char));
+            if (str == NULL)
             {
-                fprintf (binFile, "%d ", ARG);
-                (*ip)++;
-                fprintf (binFile, "%d ", arg);
-                (*ip)++;
-                return PUSH;
-
-            } else if (fscanf (asmFile, "%s", str) == 1)
-            {
-                if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, 'X') == 0)
-                {
-                    fprintf (binFile, "%d ", RAM_ARG);
-                    (*ip)++;
-
-                    int argRam = 0;
-
-                    for (int i = 1; strchr(str, '[') + i < strchr(str, ']'); i++)
-                    {
-                        argRam = argRam*basisNumberSystem + *(strchr(str, '[') + i) - '0';
-                    }
-
-                    fprintf (binFile, "%d ", arg);
-                    (*ip)++;
-                    return PUSH;
-
-                } else if (pushRamArgAndReg (binFile, str, ip, 'A', AX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushRamArgAndReg (binFile, str, ip, 'B', BX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushRamArgAndReg (binFile, str, ip, 'C', CX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushRamReg (binFile, str, ip, 'A', AX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushRamReg (binFile, str, ip, 'B', BX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushRamReg (binFile, str, ip, 'C', CX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushReg (binFile, str, ip, 'A', AX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushReg (binFile, str, ip, 'B', BX) == PUSH)
-                {
-                    return PUSH;
-
-                } else if (pushReg (binFile, str, ip, 'C', CX) == PUSH)
-                {
-                    return PUSH;
-
-                } else {
-                    printf ("Syntax error\n");
-                    return ERROR;
-                }
-            } else {
-                    printf ("Syntax error\n");
-                    return ERROR;
+                return ERROR_;
             }
-        } else if (strcmp(cmd, "POP") == 0)
-        {
-            fprintf (binFile, "%d ", POP);
-            (*ip)++;
-            return POP;
 
-        } else if (strcmp(cmd, "ADD") == 0)
-        {
-            fprintf (binFile, "%d ", ADD);
-            (*ip)++;
-            return ADD;
+            fgets (str, MAX_COMMAND_SIZE, asmFile);
 
-        } else if (strcmp(cmd, "SUB") == 0)
-        {
-            fprintf (binFile, "%d ", SUB);
-            (*ip)++;
-            return SUB;
+            int result = readingCommand(str, ip, binFile, labels);
 
-        } else if (strcmp(cmd, "MUL") == 0)
-        {
-            fprintf (binFile, "%d ", MUL);
-            (*ip)++;
-            return MUL;
+            if (result < HLT)
+            {
+                return ERROR_;
+            }
 
-        } else if (strcmp(cmd, "DIV") == 0)
-        {
-            fprintf (binFile, "%d ", DIV);
-            (*ip)++;
-            return DIV;
+            if (result == HLT)
+            {
+                return CORRECT_;
+            }      
+        }
+    }
 
-        } else if (strcmp(cmd, "OUT") == 0)
+REGS determiningRegister (char *str)
+{
+    if (strchr(str, 'X') != 0)
+    {
+        if (strchr(str, 'A') != 0)
         {
-            fprintf (binFile, "%d ", OUT);
-            (*ip)++;
-            return OUT;
-
-        } else if (jumps (asmFile, binFile, cmd, ip, labels, "JUMP", JUMP) == JUMP)
+            return AX;
+        } else if (strchr(str, 'B') != 0)
         {
-            return JUMP;
-
-        } else if (jumps (asmFile, binFile, cmd, ip, labels, "JA", JA) == JA)
+            return BX;
+        } else if (strchr(str, 'C') != 0)
         {
-            return JA;
-
-        } else if (jumps (asmFile, binFile, cmd, ip, labels, "JB", JB) == JB)
-        {
-            return JB;
-
-        } else if (strcmp(cmd, "HLT") == 0)
-        {
-            fprintf (binFile, "%d ", HLT);
-            (*ip)++;
-            return HLT;
-
+            return CX;
         } else {
-            if (strchr(cmd, ':') != 0)
-            {
-                for (int i = 0; i < 10; i++)
-                {
-                    if (strcmp(labels->labelName[i], cmd) == 0)
-                    {
-                        return LABEL;
-                    }
-                }
-
-                for (int i = 0; cmd[i] != '\0'; i++)
-                {
-                    labels->labelName[labels->labelNumber][i] = cmd[i];
-                }
-
-                labels->labelIp[labels->labelNumber] = *ip;
-
-                (labels->labelNumber)++;
-
-                return LABEL;
-            } else {
-                printf ("Syntax error\n");
-                return ERROR;
-            }
+            return REG_ERROR;
         }
+    } else {
+        return REG_ERROR;
     }
+}
 
-int seekLabels (FILE *asmFile, FILE *binFile, Labels *labels, int *ip)
+int readingImmediate (char *str)
+{
+    const char numbers [] = "1234567890";
+    char *address = strpbrk (str, numbers);
+    int arg = 0;
+    int step = 0;
+
+    while (true)
     {
-        assert (asmFile);
-        assert (binFile);
-        assert (labels);
-        assert (ip);
-
-        while (true)
+        address = strpbrk (address + step, numbers);
+        if (address == NULL)
         {
-            int result = makeBinFile(asmFile, binFile, labels, ip);
-
-            if (result < HLT)
-            {
-                return ERROR_;
-            }
-
-            if (result < CORRECT_)
-            {
-                return CORRECT_;
-            }      
+            return arg;
         }
+        
+        arg = arg*10 + *address - '0'; 
+
+        step++;
     }
 
-int pushRamArgAndReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber)
+    return arg;
+}
+
+int checkRAM (char *str)
+{
+    if (strchr(str, '[') != 0 && strchr(str, ']') != 0)
     {
-        assert (binFile);
-        assert (str);
-        assert (ip);
-
-        if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, '+') != 0 
-            && strchr(str, 'X') != 0 && strchr(str, regLetter) != 0 && strchr(str, 'X') == strchr(str, regLetter) + 1)
-            {
-                fprintf (binFile, "%d ", RAM_ARG_AND_REG);
-                (*ip)++;
-
-                int arg = 0;
-                for (int i = 1; strchr(str, '[') + i < strchr(str, '+'); i++)
-                {
-                    arg = arg*10 + *(strchr(str, '[') + i) - '0';
-                }
-
-                fprintf (binFile, "%d ", arg);
-                (*ip)++;
-                fprintf (binFile, "%d ", regNumber);
-                (*ip)++;
-
-                return PUSH;
-            }
-
-        return ERROR;
-    }
-
-int pushRamReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber)
-    {
-        assert (binFile);
-        assert (str);
-        assert (ip);
-
-        if (strchr(str, '[') != 0 && strchr(str, ']') != 0 && strchr(str, 'X') != 0 && strchr(str, regLetter) != 0 
-            && strchr(str, 'X') == strchr(str, regLetter) + 1)
-            {
-                fprintf (binFile, "%d ", RAM_REG);
-                (*ip)++;
-                fprintf (binFile, "%d ", regNumber);
-                (*ip)++;
-
-                return PUSH;
-            }
-
-        return ERROR;
-    }
-
-int pushReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber)
-    {
-        if (strchr(str, 'X') != 0 && strchr(str, regLetter) != 0 && strchr(str, 'X') == strchr(str, regLetter) + 1)
+        if (strchr(str, '+') != 0)
         {
-            fprintf (binFile, "%d ", REG);
-            (*ip)++;
-            fprintf (binFile, "%d ", regNumber);
-            (*ip)++;
-
-            return PUSH;
+            return 8;
+        } else {
+            return 5;
         }
-
-        return ERROR;
     }
 
-int jumps (FILE *asmFile, FILE *binFile, char *cmd, int *ip, Labels *labels, const char *jumpType, int jumpNumber)
+    return 0;
+}
+
+int determiningLabel (char *str, Labels *labels, FILE *binFile, int *ip)
+{
+    for (int i = 0; i < MAX_COMMAND_SIZE; i++)
     {
-        if (strcmp(cmd, jumpType) == 0)
+        if (strstr(str, labels->labelName[i]) != 0)
         {
-            fprintf (binFile, "%d ", jumpNumber);
+            fprintf (binFile, "%d ", labels->labelIp[i]);
             (*ip)++;
-            int arg = 0;
-            char label [15] = {};
+            return 1;
+        }
+    }
 
-            if (fscanf (asmFile, "%d", &arg) == 1)
-            {
-                fprintf (binFile, "%d ", arg);
-                (*ip)++;
-                return JUMP;
+    return 0;
+}
 
-            } else if (fscanf (asmFile, "%s", label) == 1)
-            {
-                for (int i = 0; i < MAX_COMMAND_SIZE; i++)
-                {
-                    if (strcmp(label, labels->labelName[i]) == 0)
-                    {
-                        fprintf (binFile, "%d ", labels->labelIp[i]);
-                        (*ip)++;
-                        return jumpNumber;
-                    }
-                }
-                    (*ip)++;
-            }
+CMD readingCommand (char *str, int *ip, FILE *binFile, Labels *labels)
+{
+    assert (binFile);
+    assert (labels);
+    assert (ip);
+    assert (str);
 
-            return jumpNumber;
+    if (strstr(str, "PUSH") != 0)
+    {
+        fprintf (binFile, "%d ", PUSH);
+        (*ip)++;
+
+        int pushMode = checkRAM(str) + determiningRegister(str);
+        fprintf(binFile, "%d ", pushMode);
+        (*ip)++;
+
+        if (pushMode == ARG || pushMode == RAM_ARG || pushMode == RAM_ARG_AND_REG)
+        {
+            fprintf(binFile, "%d ", readingImmediate(str));
+            (*ip)++;
         }
 
+        if (pushMode == REG || pushMode == RAM_REG || pushMode == RAM_ARG_AND_REG)
+        {
+            fprintf(binFile, "%d ", determiningRegister(str));
+            (*ip)++;
+        }
+
+        return PUSH;
+
+    } else if (strstr(str, "POP") != 0)
+    {
+        fprintf (binFile, "%d ", PUSH);
+        (*ip)++;
+        return POP;
+    } else if (strstr(str, "ADD") != 0)
+    {
+        fprintf (binFile, "%d ", ADD);
+        (*ip)++;
+        return ADD;
+    } else if (strstr(str, "SUB") != 0)
+    {
+        fprintf (binFile, "%d ", SUB);
+        (*ip)++;
+        return SUB;
+    } else if (strstr(str, "MUL") != 0)
+    {
+        fprintf (binFile, "%d ", MUL);
+        (*ip)++;
+        return MUL;
+    } else if (strstr(str, "DIV") != 0)
+    {
+        fprintf (binFile, "%d ", DIV);
+        (*ip)++;
+        return DIV;
+    } else if (strstr(str, "OUT") != 0)
+    {
+        fprintf (binFile, "%d ", OUT);
+        (*ip)++;
+        return OUT;
+    } else if (strstr(str, "HLT") != 0)
+    {
+        fprintf (binFile, "%d ", HLT);
+        (*ip)++;
+        return HLT;
+    } else if (strstr(str, "JUMP") != 0)
+    {
+        fprintf (binFile, "%d ", JUMP);
+        (*ip)++;
+        
+        if (determiningLabel (str, labels, binFile, ip) == 0)
+        {
+            fprintf (binFile, "%d ", readingImmediate(str));
+            (*ip)++;
+        }
+
+        return JUMP;
+
+    } else if (strstr(str, "JA") != 0)
+    {
+        fprintf (binFile, "%d ", JA);
+        (*ip)++;
+        
+        if (determiningLabel (str, labels, binFile, ip) == 0)
+        {
+            fprintf (binFile, "%d ", readingImmediate(str));
+            (*ip)++;
+        }
+
+        return JA;
+
+    } else if (strstr(str, "JB") != 0)
+    {
+        fprintf (binFile, "%d ", JUMP);
+        (*ip)++;
+        
+        if (determiningLabel (str, labels, binFile, ip) == 0)
+        {
+            fprintf (binFile, "%d ", readingImmediate(str));
+            (*ip)++;
+        }
+
+        return JB;
+    } else {
         return ERROR;
     }
+}

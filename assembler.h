@@ -8,11 +8,11 @@
 const int MAX_COMMAND_SIZE = 10;
 
 ERROR_CODES readFile (SPU *spu);
-CMD makeBinFile (FILE *asmFile, FILE *binFile, Labels *labels, int *ip);
-int seekLabels (FILE *asmFile, FILE *binFile, Labels *labels, int *ip);
-int pushRamArgAndReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber);
-int pushRamReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber);
-int pushReg (FILE *binFile, char *str, int *ip, char regLetter, int regNumber);
-int jumps (FILE *asmFile, FILE *binFile, char *cmd, int *ip, Labels *labels, const char *jumpType, int jumpNumber);
+int compilation (FILE *asmFile, FILE *binFile, Labels *labels, int *ip);
+REGS determiningRegister (char *str);
+int readingImmediate (char *str);
+int checkRAM (char *str);
+int determiningLabel (char *str, Labels *labels, FILE *binFile, int *ip);
+CMD readingCommand (char *str, int *ip, FILE *binFile, Labels *labels);
 
 #endif

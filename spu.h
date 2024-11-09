@@ -8,10 +8,9 @@
 #define ASM_FILE "program_code.txt"
 #define BINARY_FILE "program.asm"
 #define SIGN "ABED"
-#define VERSION 2
-#define DEFAULT_STACK_SIZE 10
-
-const int sizeLabel = 15;
+const int VERSION = 2;
+const int DEFAULT_STACK_SIZE = 10;
+const int SIZE_LABEL = 15;
 const int numberLabels = 10;
 const int DEFAULT_REG_SIZE = 4;
 const int DEFAULT_RAM_SIZE = 100;
@@ -27,16 +26,17 @@ enum REGS
 {
     AX = 1,
     BX = 2,
-    CX = 3
+    CX = 3,
+    REG_ERROR = 0
 };
 
 enum PUSH_MODE
 {
-    ARG             = 1,
-    REG             = 2,
-    RAM_ARG         = 3,
-    RAM_REG         = 4,
-    RAM_ARG_AND_REG = 5
+    ARG             = 0,
+    REG             = 1,
+    RAM_ARG         = 5,
+    RAM_REG         = 6,
+    RAM_ARG_AND_REG = 9
 };
 
 enum CMD
