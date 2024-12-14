@@ -4,6 +4,9 @@ int writeSignature (FILE *binFile, FILE *asmFile)
     {
         assert (binFile);
         assert (asmFile);
+
+        fseek (asmFile, 0, SEEK_SET);
+        fseek (binFile, 0, SEEK_SET);
         
         fprintf (binFile, "%s ", SIGN);
         fprintf (binFile, "%d ", VERSION);
